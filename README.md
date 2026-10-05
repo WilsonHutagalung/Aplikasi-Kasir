@@ -51,6 +51,3 @@ npm run build
 npm run electron
 ```
 
-## Lisensi
-
-MIT
