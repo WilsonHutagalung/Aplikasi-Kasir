@@ -1,0 +1,42 @@
+# Environment & Credentials
+.env
+.env.*
+!.env.example
+auth.json
+
+# Dependencies
+/node_modules
+/vendor
+
+# Electron & Web Build Outputs (EXE / Zip)
+/dist
+/dist-electron
+/dist-desktop
+/public/build
+/public/hot
+/public/storage
+
+# Database & Storage Logs
+/database/*.sqlite
+/database/*.sqlite-journal
+/storage/*.key
+/storage/logs/*
+!/storage/logs/.gitkeep
+/storage/framework/cache/*
+!/storage/framework/cache/.gitkeep
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitkeep
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+
+# IDE & System Files
+.DS_Store
+Thumbs.db
+*.log
+.phpunit.result.cache
+/.vscode
+/.idea
+/.fleet
+/.nova
+/.zed
+/.phpunit.cache

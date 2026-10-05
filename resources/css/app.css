@@ -1,0 +1,60 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../**/*.jsx';
+
+@theme {
+    --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+
+    /* Slate Neutral Scale */
+    --color-slate-50: #faf7f6;
+    --color-slate-100: #e3ded7;
+    --color-slate-200: #cbcac7;
+    --color-slate-300: #cbcac7;
+    --color-slate-400: #888785;
+    --color-slate-500: #666664;
+    --color-slate-600: #4a4a49;
+    --color-slate-700: #333333;
+    --color-slate-800: #333333;
+    --color-slate-900: #285570;
+    --color-slate-950: #1b3d52;
+
+    /* Blue / Primary Accent Scale */
+    --color-blue-50: #f0f5f8;
+    --color-blue-100: #e3ded7;
+    --color-blue-200: #b9d3e3;
+    --color-blue-300: #93b7ce;
+    --color-blue-400: #6494b3;
+    --color-blue-500: #3b7194;
+    --color-blue-600: #285570;
+    --color-blue-700: #1e4258;
+    --color-blue-800: #173345;
+    --color-blue-900: #102330;
+    --color-blue-950: #0a161f;
+}
+
+body {
+    background-color: #faf7f6;
+    color: #333333;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #thermal-receipt, #thermal-receipt * {
+        visibility: visible;
+    }
+    #thermal-receipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80mm;
+        margin: 0;
+        padding: 10px;
+        font-family: 'Courier New', Courier, monospace;
+    }
+}
