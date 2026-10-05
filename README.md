@@ -1,6 +1,6 @@
 # Aplikasi Kasir (Universal POS)
 
-Aplikasi kasir offline berbasis desktop untuk semua jenis usaha — retail, F&B, jasa, dan lainnya.
+Aplikasi kasir offline berbasis desktop untuk semua jenis usaha  retail, F&B, jasa, dan lainnya.
 
 ## Tech Stack
 
