@@ -136,16 +136,22 @@ function setupDotEnv(laravelPath) {
         }
     }
 
+    const existingDbConn = envContent.match(/^DB_CONNECTION=(.*)$/m);
+    const isCustomDb = existingDbConn && ['pgsql', 'mysql', 'mariadb'].includes(existingDbConn[1].trim());
+
     const updates = {
         'APP_ENV': 'production',
         'APP_DEBUG': 'false',
         'APP_URL': `http://127.0.0.1:${PHP_PORT}`,
-        'DB_CONNECTION': 'sqlite',
-        'DB_DATABASE': targetDbPath,
         'SESSION_DRIVER': 'file',
         'CACHE_STORE': 'file',
         'QUEUE_CONNECTION': 'sync',
     };
+
+    if (!isCustomDb) {
+        updates['DB_CONNECTION'] = 'sqlite';
+        updates['DB_DATABASE'] = targetDbPath;
+    }
 
     for (const [key, value] of Object.entries(updates)) {
         const regex = new RegExp(`^${key}=.*$`, 'm');

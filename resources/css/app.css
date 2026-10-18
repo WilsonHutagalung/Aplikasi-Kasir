@@ -41,6 +41,14 @@ body {
     color: #333333;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
 @media print {
     body * {
         visibility: hidden;

@@ -233,7 +233,7 @@ const PosPage = () => {
                         </form>
 
                         {/* Category Pills */}
-                        <div className="flex items-center space-x-1.5 overflow-x-auto py-1 max-w-full">
+                        <div className="flex items-center space-x-1.5 overflow-x-auto py-1 max-w-full no-scrollbar">
                             <button
                                 onClick={() => setSelectedCategory('')}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
@@ -267,40 +267,44 @@ const PosPage = () => {
                                 <button
                                     key={item.id}
                                     onClick={() => addToCart(item, 1)}
-                                    className="bg-white border border-slate-200 hover:border-blue-500 hover:shadow-md p-3 rounded-xl text-left flex flex-col gap-3 transition-all group cursor-pointer relative overflow-hidden"
+                                    className="bg-white border border-slate-200 hover:border-blue-500 hover:shadow-md p-3.5 rounded-2xl text-left flex flex-col justify-between transition-all group cursor-pointer relative hover:-translate-y-0.5 active:translate-y-0 min-h-[140px]"
                                 >
-                                    <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-slate-50 border border-slate-100 relative">
-                                        {item.image_url ? (
+                                    {item.image_url ? (
+                                        <div className="h-28 w-full rounded-xl overflow-hidden bg-slate-50 border border-slate-100 relative mb-2.5 shrink-0">
                                             <img
                                                 src={item.image_url}
                                                 alt={item.name}
                                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                             />
-                                        ) : (
-                                            <div className={`h-full w-full flex items-center justify-center ${item.type === 'SERVICE' ? 'bg-gradient-to-br from-purple-50 to-slate-100' : 'bg-gradient-to-br from-slate-50 to-blue-50'}`}>
-                                                <div className={`h-14 w-14 rounded-2xl flex items-center justify-center ${item.type === 'SERVICE' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
-                                                    <Package size={28} />
-                                                </div>
-                                            </div>
-                                        )}
-                                        <span className={`absolute top-2 left-2 inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase shadow-sm ${
-                                            item.type === 'SERVICE' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'
-                                        }`}>
-                                            {item.type === 'SERVICE' ? 'Jasa' : `Stok: ${item.stock}`}
-                                        </span>
-                                    </div>
-                                    <div className="min-h-[3.5rem]">
-                                        <h4 className="font-semibold text-slate-800 text-sm line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                            <span className={`absolute top-2 left-2 inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase shadow-sm ${
+                                                item.type === 'SERVICE' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'
+                                            }`}>
+                                                {item.type === 'SERVICE' ? 'Jasa' : `Stok: ${item.stock}`}
+                                            </span>
+                                        </div>
+                                    ) : null}
+
+                                    <div className="flex flex-col gap-1.5 w-full">
+                                        <div className="flex items-center justify-between gap-1.5">
+                                            <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 truncate max-w-[65%]">
+                                                {item.category?.name || 'Umum'}
+                                            </span>
+                                            <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold uppercase shrink-0 ${
+                                                item.type === 'SERVICE' ? 'bg-purple-100 text-purple-700' : 'bg-blue-50 text-blue-700'
+                                            }`}>
+                                                {item.type === 'SERVICE' ? 'Jasa' : `Stok: ${item.stock ?? 0}`}
+                                            </span>
+                                        </div>
+
+                                        <h4 className="font-semibold text-slate-800 text-sm line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors pt-0.5">
                                             {item.name}
                                         </h4>
-                                        <p className="mt-1 text-[11px] text-slate-400 font-medium line-clamp-1">
-                                            {item.category?.name || 'Tanpa kategori'}
-                                        </p>
                                     </div>
-                                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+
+                                    <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between w-full">
                                         <span className="font-bold text-slate-900 text-sm">{formatCurrency(item.selling_price)}</span>
-                                        <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center transition-colors">
-                                            <Plus size={14} />
+                                        <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center transition-colors shadow-2xs">
+                                            <Plus size={15} />
                                         </div>
                                     </div>
                                 </button>
