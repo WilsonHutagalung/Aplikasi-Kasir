@@ -17,7 +17,7 @@ class ReportController extends Controller
         $endDate = $request->get('end_date', now()->format('Y-m-d'));
 
         $salesQuery = Sale::where('status', 'COMPLETED')
-            ->whereBetween('transaction_date', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+            ->whereBetween('transaction_date', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
 
         $totalSales = $salesQuery->sum('total');
         $totalTransactions = $salesQuery->count();
@@ -26,13 +26,13 @@ class ReportController extends Controller
 
         $totalItemsSold = SaleItem::whereHas('sale', function ($q) use ($startDate, $endDate) {
             $q->where('status', 'COMPLETED')
-              ->whereBetween('transaction_date', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+                ->whereBetween('transaction_date', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         })->sum('quantity');
 
         // Gross Profit Calculation
         $cogs = SaleItem::whereHas('sale', function ($q) use ($startDate, $endDate) {
             $q->where('status', 'COMPLETED')
-              ->whereBetween('transaction_date', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+                ->whereBetween('transaction_date', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         })->select(DB::raw('SUM(purchase_price * quantity) as total_cogs'))->value('total_cogs') ?? 0;
 
         $grossProfit = $totalSales - $cogs;
@@ -57,7 +57,7 @@ class ReportController extends Controller
 
         if ($period === 'month') {
             $startDate = now()->startOfMonth();
-        } else if ($period === 'year') {
+        } elseif ($period === 'year') {
             $startDate = now()->startOfYear();
         } else {
             $startDate = now()->subDays(7);
@@ -79,7 +79,7 @@ class ReportController extends Controller
 
     public function topProducts(Request $request)
     {
-        $top = SaleItem::whereHas('sale', fn($q) => $q->where('status', 'COMPLETED'))
+        $top = SaleItem::whereHas('sale', fn ($q) => $q->where('status', 'COMPLETED'))
             ->select('item_id', 'item_name', DB::raw('SUM(quantity) as total_qty'), DB::raw('SUM(total) as total_revenue'))
             ->groupBy('item_id', 'item_name')
             ->orderBy('total_qty', 'desc')

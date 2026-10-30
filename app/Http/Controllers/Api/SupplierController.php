@@ -15,10 +15,11 @@ class SupplierController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
+
         return response()->json($query->latest()->get());
     }
 
@@ -34,12 +35,13 @@ class SupplierController extends Controller
         ]);
 
         $supplier = Supplier::create($validated);
+
         return response()->json($supplier, 201);
     }
 
     public function show(Supplier $supplier)
     {
-        return response()->json($supplier->load(['purchases' => fn($q) => $q->latest()->limit(10)]));
+        return response()->json($supplier->load(['purchases' => fn ($q) => $q->latest()->limit(10)]));
     }
 
     public function update(Request $request, Supplier $supplier)
@@ -54,12 +56,14 @@ class SupplierController extends Controller
         ]);
 
         $supplier->update($validated);
+
         return response()->json($supplier);
     }
 
     public function destroy(Supplier $supplier)
     {
         $supplier->delete();
+
         return response()->json(['message' => 'Supplier berhasil dihapus']);
     }
 }

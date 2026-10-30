@@ -15,7 +15,7 @@ class ShiftController extends Controller
             ->where('status', 'OPEN')
             ->first();
 
-        if (!$shift) {
+        if (! $shift) {
             return response()->json(['active' => false, 'shift' => null]);
         }
 
@@ -64,7 +64,7 @@ class ShiftController extends Controller
             ->where('status', 'OPEN')
             ->first();
 
-        if (!$shift) {
+        if (! $shift) {
             return response()->json(['message' => 'Tidak ada shift aktif yang perlu ditutup.'], 422);
         }
 
@@ -95,6 +95,7 @@ class ShiftController extends Controller
     public function index(Request $request)
     {
         $shifts = CashierShift::with('user')->latest()->paginate(20);
+
         return response()->json($shifts);
     }
 }

@@ -58,10 +58,10 @@ const SettingsPage = () => {
         }
     };
 
-    const handleRestoreBackup = async (filename) => {
-        if (!confirm(`Peringatan! Yakin restore database dari file ${filename}? Sistem akan membuat backup otomatis terlebih dahulu.`)) return;
+    const handleRestoreBackup = async (backup) => {
+        if (!confirm(`Peringatan! Yakin restore database dari file ${backup.filename}? Sistem akan membuat backup otomatis terlebih dahulu.`)) return;
         try {
-            await api.post('/backups/restore', { filename });
+            await api.post('/backups/restore', { backup_id: backup.id });
             alert('Restore database berhasil!');
             window.location.reload();
         } catch (err) {
@@ -213,7 +213,7 @@ const SettingsPage = () => {
                                                 <td className="px-4 py-3.5 text-xs text-slate-500">{new Date(b.created_at).toLocaleString('id-ID')}</td>
                                                 <td className="px-4 py-3.5 text-center">
                                                     <button
-                                                        onClick={() => handleRestoreBackup(b.filename)}
+                                                        onClick={() => handleRestoreBackup(b)}
                                                         className="px-3 py-1 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg text-xs font-semibold flex items-center gap-1 mx-auto cursor-pointer"
                                                     >
                                                         <RefreshCcw size={14} /> Restore

@@ -19,8 +19,8 @@ class ItemController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%")
-                  ->orWhere('barcode', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%")
+                    ->orWhere('barcode', 'like', "%{$search}%");
             });
         }
 
@@ -89,7 +89,7 @@ class ItemController extends Controller
 
     public function show(Item $item)
     {
-        return response()->json($item->load(['category', 'unit', 'movements' => fn($q) => $q->latest()->limit(20)]));
+        return response()->json($item->load(['category', 'unit', 'movements' => fn ($q) => $q->latest()->limit(20)]));
     }
 
     public function update(Request $request, Item $item)
@@ -128,6 +128,7 @@ class ItemController extends Controller
         }
 
         $item->save();
+
         return response()->json($item->load(['category', 'unit']));
     }
 
@@ -138,6 +139,7 @@ class ItemController extends Controller
         }
 
         $item->delete();
+
         return response()->json(['message' => 'Item berhasil dihapus']);
     }
 }

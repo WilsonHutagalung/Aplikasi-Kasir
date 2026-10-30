@@ -17,312 +17,318 @@ class MasterDataSeeder extends Seeder
 {
     public function run(): void
     {
-        // Payment methods
-        PaymentMethod::firstOrCreate(['code' => 'CASH'], ['name' => 'Tunai / Cash', 'is_active' => true]);
-        PaymentMethod::firstOrCreate(['code' => 'QRIS'], ['name' => 'QRIS (GoPay, OVO, ShopeePay, Dana)', 'is_active' => true]);
-        PaymentMethod::firstOrCreate(['code' => 'DEBIT'], ['name' => 'Kartu Debit / Kredit (EDC)', 'is_active' => true]);
-        PaymentMethod::firstOrCreate(['code' => 'TRANSFER'], ['name' => 'Transfer Bank (BCA / Mandiri / BNI)', 'is_active' => true]);
+        $this->seedPaymentMethods();
+        $this->seedTaxesAndDiscounts();
 
-        // Taxes and discounts
+        $units = $this->seedUnits();
+        $categories = $this->seedCategories();
+
+        $this->seedCustomers();
+        $this->seedSuppliers();
+        $this->seedItems($units, $categories);
+    }
+
+    private function seedPaymentMethods(): void
+    {
+        $paymentMethods = [
+            ['code' => 'CASH', 'name' => 'Tunai', 'is_active' => true],
+            ['code' => 'QRIS', 'name' => 'QRIS', 'is_active' => true],
+            ['code' => 'DEBIT', 'name' => 'Kartu Debit / Kredit (EDC)', 'is_active' => true],
+            ['code' => 'TRANSFER', 'name' => 'Transfer Bank', 'is_active' => true],
+        ];
+
+        foreach ($paymentMethods as $paymentMethod) {
+            PaymentMethod::firstOrCreate(
+                ['code' => $paymentMethod['code']],
+                $paymentMethod
+            );
+        }
+    }
+
+    private function seedTaxesAndDiscounts(): void
+    {
         Tax::firstOrCreate(
             ['name' => 'PPN 11%'],
-            ['rate' => 11.00, 'type' => 'PERCENTAGE', 'is_inclusive' => false, 'is_active' => true]
-        );
-        Tax::firstOrCreate(
-            ['name' => 'Pajak Resto / PB1 10%'],
-            ['rate' => 10.00, 'type' => 'PERCENTAGE', 'is_inclusive' => false, 'is_active' => true]
+            [
+                'rate' => 11.00,
+                'type' => 'PERCENTAGE',
+                'is_inclusive' => false,
+                'is_active' => true,
+            ]
         );
 
         Discount::firstOrCreate(
-            ['name' => 'Diskon Member 5%'],
-            ['type' => 'PERCENTAGE', 'value' => 5.00, 'is_active' => true]
+            ['name' => 'Diskon Pembelian Proyek 5%'],
+            [
+                'type' => 'PERCENTAGE',
+                'value' => 5.00,
+                'is_active' => true,
+            ]
         );
-        Discount::firstOrCreate(
-            ['name' => 'Voucher Promo Rp 10.000'],
-            ['type' => 'FIXED', 'value' => 10000.00, 'is_active' => true]
-        );
+    }
 
-        // Units
-        $pcs = Unit::firstOrCreate(['name' => 'Pcs (Pieces)', 'symbol' => 'pcs']);
-        $pack = Unit::firstOrCreate(['name' => 'Pack / Bungkus', 'symbol' => 'pck']);
-        $botol = Unit::firstOrCreate(['name' => 'Botol / Can', 'symbol' => 'btl']);
-        $kg = Unit::firstOrCreate(['name' => 'Kilogram', 'symbol' => 'kg']);
-        $porsi = Unit::firstOrCreate(['name' => 'Porsi', 'symbol' => 'prs']);
-        $cup = Unit::firstOrCreate(['name' => 'Cup', 'symbol' => 'cup']);
+    /**
+     * @return array<string, Unit>
+     */
+    private function seedUnits(): array
+    {
+        $unitData = [
+            'pcs' => ['name' => 'Pieces', 'symbol' => 'pcs'],
+            'sak' => ['name' => 'Sak', 'symbol' => 'sak'],
+            'batang' => ['name' => 'Batang', 'symbol' => 'btg'],
+            'meter' => ['name' => 'Meter', 'symbol' => 'm'],
+            'lembar' => ['name' => 'Lembar', 'symbol' => 'lbr'],
+            'kaleng' => ['name' => 'Kaleng', 'symbol' => 'klg'],
+            'kubik' => ['name' => 'Meter Kubik', 'symbol' => 'm³'],
+        ];
 
-        // Categories
-        $fnb = Category::firstOrCreate(['name' => '☕ Makanan & Minuman (F&B)']);
-        $grocery = Category::firstOrCreate(['name' => '🛒 Sembako & Minimarket']);
-        $fashion = Category::firstOrCreate(['name' => '👕 Pakaian & Fashion']);
-        $elec = Category::firstOrCreate(['name' => '🔌 Elektronik & Gadget']);
-        $service = Category::firstOrCreate(['name' => '🧼 Jasa & Layanan']);
-        $health = Category::firstOrCreate(['name' => '💊 Kesehatan & Beauty']);
+        $units = [];
 
-        // Customers and suppliers
-        Customer::firstOrCreate(['name' => 'Pelanggan Umum (Walk-in Customer)']);
-        Customer::firstOrCreate([
-            'name' => 'Budi Santoso (Member Gold)',
-            'phone' => '0811-9988-7766',
-            'email' => 'budi.santoso@gmail.com',
-            'address' => 'Jakarta Selatan'
-        ]);
-        Customer::firstOrCreate([
-            'name' => 'Siti Rahmawati (Member Silver)',
-            'phone' => '0857-1122-3344',
-            'email' => 'siti.rahma@yahoo.com',
-            'address' => 'Bandung'
-        ]);
-        Customer::firstOrCreate(['name' => 'Meja 01 (Dine-in)', 'phone' => 'Meja-01']);
-        Customer::firstOrCreate(['name' => 'Meja 02 (Dine-in)', 'phone' => 'Meja-02']);
+        foreach ($unitData as $key => $data) {
+            $units[$key] = Unit::firstOrCreate(['symbol' => $data['symbol']], $data);
+        }
 
-        Supplier::firstOrCreate([
-            'name' => 'PT Distribusi Sembako Nasional',
-            'phone' => '021-5551234',
-            'email' => 'sales@distribusisembako.co.id',
-            'address' => 'Jakarta'
-        ]);
-        Supplier::firstOrCreate([
-            'name' => 'CV Gadget & Aksesoris Import',
-            'phone' => '021-88997766',
-            'email' => 'order@gadgetimport.id',
-            'address' => 'Surabaya'
-        ]);
+        return $units;
+    }
 
-        // Products and services
+    /**
+     * @return array<string, Category>
+     */
+    private function seedCategories(): array
+    {
+        $categoryData = [
+            'material' => 'Material Bangunan',
+            'besi' => 'Besi dan Baja',
+            'semen' => 'Semen dan Mortar',
+            'cat' => 'Cat dan Pelapis',
+            'pipa' => 'Pipa dan Sanitasi',
+            'perkakas' => 'Perkakas',
+        ];
+
+        $categories = [];
+
+        foreach ($categoryData as $key => $name) {
+            $categories[$key] = Category::firstOrCreate(['name' => $name]);
+        }
+
+        return $categories;
+    }
+
+    private function seedCustomers(): void
+    {
+        $customers = [
+            [
+                'name' => 'Pelanggan Umum',
+                'phone' => '0800000000',
+                'address' => 'Pembelian langsung di toko',
+            ],
+            [
+                'name' => 'CV Bangun Jaya',
+                'phone' => '081234567890',
+                'email' => 'procurement@bangunjaya.test',
+                'address' => 'Jl. Konstruksi No. 12, Jakarta',
+            ],
+            [
+                'name' => 'Bapak Andi - Proyek Rumah',
+                'phone' => '081298765432',
+                'address' => 'Bekasi, Jawa Barat',
+            ],
+        ];
+
+        foreach ($customers as $customer) {
+            Customer::firstOrCreate(['name' => $customer['name']], $customer);
+        }
+    }
+
+    private function seedSuppliers(): void
+    {
+        $suppliers = [
+            [
+                'name' => 'PT Semen Nusantara',
+                'phone' => '0215551001',
+                'email' => 'order@semennusantara.test',
+                'address' => 'Jakarta',
+            ],
+            [
+                'name' => 'CV Baja Makmur',
+                'phone' => '0215551002',
+                'email' => 'sales@bajamakmur.test',
+                'address' => 'Bekasi, Jawa Barat',
+            ],
+            [
+                'name' => 'PT Mitra Bangunan Indonesia',
+                'phone' => '0215551003',
+                'email' => 'sales@mitrabangunan.test',
+                'address' => 'Tangerang, Banten',
+            ],
+        ];
+
+        foreach ($suppliers as $supplier) {
+            Supplier::firstOrCreate(['name' => $supplier['name']], $supplier);
+        }
+    }
+
+    /**
+     * @param  array<string, Unit>  $units
+     * @param  array<string, Category>  $categories
+     */
+    private function seedItems(array $units, array $categories): void
+    {
         $items = [
-            // F&B / Cafe
             [
-                'name' => 'Kopi Susu Gula Aren 250ml',
-                'type' => 'PRODUCT',
-                'sku' => 'FNB-001',
-                'barcode' => '8992001001',
-                'category_id' => $fnb->id,
-                'unit_id' => $cup->id,
-                'purchase_price' => 8000,
-                'selling_price' => 22000,
-                'minimum_stock' => 10,
-                'track_stock' => true,
-                'stock' => 85,
-            ],
-            [
-                'name' => 'Croissant French Butter Crisp',
-                'type' => 'PRODUCT',
-                'sku' => 'FNB-002',
-                'barcode' => '8992001002',
-                'category_id' => $fnb->id,
-                'unit_id' => $pcs->id,
-                'purchase_price' => 9000,
-                'selling_price' => 20000,
-                'minimum_stock' => 5,
-                'track_stock' => true,
-                'stock' => 40,
-            ],
-            [
-                'name' => 'Nasi Goreng Special Telur',
-                'type' => 'PRODUCT',
-                'sku' => 'FNB-003',
-                'barcode' => '8992001003',
-                'category_id' => $fnb->id,
-                'unit_id' => $porsi->id,
-                'purchase_price' => 14000,
-                'selling_price' => 28000,
-                'minimum_stock' => 5,
-                'track_stock' => true,
-                'stock' => 50,
-            ],
-
-            // 🛒 Minimarket & Sembako
-            [
-                'name' => 'Minyak Goreng Bimoli 2 Liter',
-                'type' => 'PRODUCT',
-                'sku' => 'GRC-001',
-                'barcode' => '8991001101',
-                'category_id' => $grocery->id,
-                'unit_id' => $botol->id,
-                'purchase_price' => 32000,
-                'selling_price' => 38000,
-                'minimum_stock' => 15,
-                'track_stock' => true,
+                'name' => 'Semen Portland Komposit 40kg',
+                'sku' => 'BBG-SEM-001',
+                'barcode' => '899700100001',
+                'category_id' => $categories['semen']->id,
+                'unit_id' => $units['sak']->id,
+                'purchase_price' => 52000,
+                'selling_price' => 65000,
+                'minimum_stock' => 20,
                 'stock' => 120,
             ],
             [
-                'name' => 'Beras Premium Ramos 5kg',
-                'type' => 'PRODUCT',
-                'sku' => 'GRC-002',
-                'barcode' => '8991001102',
-                'category_id' => $grocery->id,
-                'unit_id' => $pack->id,
+                'name' => 'Mortar Instan Perekat Bata Ringan 40kg',
+                'sku' => 'BBG-SEM-002',
+                'barcode' => '899700100002',
+                'category_id' => $categories['semen']->id,
+                'unit_id' => $units['sak']->id,
+                'purchase_price' => 48000,
+                'selling_price' => 60000,
+                'minimum_stock' => 15,
+                'stock' => 75,
+            ],
+            [
+                'name' => 'Besi Beton Polos 10mm x 12m',
+                'sku' => 'BBG-BES-001',
+                'barcode' => '899700100003',
+                'category_id' => $categories['besi']->id,
+                'unit_id' => $units['batang']->id,
                 'purchase_price' => 68000,
-                'selling_price' => 75000,
-                'minimum_stock' => 10,
-                'track_stock' => true,
-                'stock' => 60,
-            ],
-            [
-                'name' => 'Indomie Goreng Spesial 85g',
-                'type' => 'PRODUCT',
-                'sku' => 'GRC-003',
-                'barcode' => '8991001103',
-                'category_id' => $grocery->id,
-                'unit_id' => $pcs->id,
-                'purchase_price' => 2900,
-                'selling_price' => 3500,
+                'selling_price' => 82000,
                 'minimum_stock' => 30,
-                'track_stock' => true,
-                'stock' => 200,
-            ],
-
-            // 👕 Pakaian & Fashion
-            [
-                'name' => 'Kaos Polos Cotton Combed 30s',
-                'type' => 'PRODUCT',
-                'sku' => 'FSH-001',
-                'barcode' => '8993001001',
-                'category_id' => $fashion->id,
-                'unit_id' => $pcs->id,
-                'purchase_price' => 35000,
-                'selling_price' => 65000,
-                'minimum_stock' => 5,
-                'track_stock' => true,
-                'stock' => 45,
+                'stock' => 150,
             ],
             [
-                'name' => 'Celana Chino Slim Fit Pria',
-                'type' => 'PRODUCT',
-                'sku' => 'FSH-002',
-                'barcode' => '8993001002',
-                'category_id' => $fashion->id,
-                'unit_id' => $pcs->id,
-                'purchase_price' => 85000,
-                'selling_price' => 149000,
-                'minimum_stock' => 5,
-                'track_stock' => true,
-                'stock' => 30,
-            ],
-
-            // 🔌 Elektronik & Gadget
-            [
-                'name' => 'Headset Bluetooth TWS Wireless',
-                'type' => 'PRODUCT',
-                'sku' => 'ELC-001',
-                'barcode' => '8994001001',
-                'category_id' => $elec->id,
-                'unit_id' => $pcs->id,
-                'purchase_price' => 95000,
-                'selling_price' => 155000,
-                'minimum_stock' => 3,
-                'track_stock' => true,
-                'stock' => 25,
-            ],
-            [
-                'name' => 'Kabel Data Fast Charging Type-C',
-                'type' => 'PRODUCT',
-                'sku' => 'ELC-002',
-                'barcode' => '8994001002',
-                'category_id' => $elec->id,
-                'unit_id' => $pcs->id,
-                'purchase_price' => 15000,
-                'selling_price' => 35000,
-                'minimum_stock' => 10,
-                'track_stock' => true,
-                'stock' => 80,
-            ],
-            [
-                'name' => 'Mouse Optical USB Logitech',
-                'type' => 'PRODUCT',
-                'sku' => 'ELC-003',
-                'barcode' => '8994001003',
-                'category_id' => $elec->id,
-                'unit_id' => $pcs->id,
-                'purchase_price' => 45000,
-                'selling_price' => 75000,
-                'minimum_stock' => 3,
-                'track_stock' => true,
-                'stock' => 15,
-            ],
-
-            // Jasa & Layanan (Services)
-            [
-                'name' => 'Jasa Cuci Express Laundry (Per Kg)',
-                'type' => 'SERVICE',
-                'sku' => 'SRV-001',
-                'barcode' => '8996001001',
-                'category_id' => $service->id,
-                'unit_id' => $kg->id,
-                'purchase_price' => 3000,
-                'selling_price' => 10000,
-                'minimum_stock' => 0,
-                'track_stock' => false,
-                'stock' => 0,
-            ],
-            [
-                'name' => 'Jasa Potong Rambut Pria / Cukur',
-                'type' => 'SERVICE',
-                'sku' => 'SRV-002',
-                'barcode' => '8996001002',
-                'category_id' => $service->id,
-                'unit_id' => $pcs->id,
-                'purchase_price' => 0,
-                'selling_price' => 35000,
-                'minimum_stock' => 0,
-                'track_stock' => false,
-                'stock' => 0,
-            ],
-            [
-                'name' => 'Jasa Service / Ganti Oli Motor',
-                'type' => 'SERVICE',
-                'sku' => 'SRV-003',
-                'barcode' => '8996001003',
-                'category_id' => $service->id,
-                'unit_id' => $pcs->id,
-                'purchase_price' => 0,
-                'selling_price' => 45000,
-                'minimum_stock' => 0,
-                'track_stock' => false,
-                'stock' => 0,
-            ],
-
-            // 💊 Kesehatan & Beauty
-            [
-                'name' => 'Vitamin C 1000mg Strip 10s',
-                'type' => 'PRODUCT',
-                'sku' => 'HLT-001',
-                'barcode' => '8995001001',
-                'category_id' => $health->id,
-                'unit_id' => $pack->id,
-                'purchase_price' => 12000,
-                'selling_price' => 20000,
-                'minimum_stock' => 10,
-                'track_stock' => true,
+                'name' => 'Besi Beton Ulir 12mm x 12m',
+                'sku' => 'BBG-BES-002',
+                'barcode' => '899700100004',
+                'category_id' => $categories['besi']->id,
+                'unit_id' => $units['batang']->id,
+                'purchase_price' => 98000,
+                'selling_price' => 118000,
+                'minimum_stock' => 20,
                 'stock' => 90,
             ],
             [
-                'name' => 'Sunscreen Hydrating SPF 50 PA+++',
-                'type' => 'PRODUCT',
-                'sku' => 'HLT-002',
-                'barcode' => '8995001002',
-                'category_id' => $health->id,
-                'unit_id' => $botol->id,
-                'purchase_price' => 42000,
-                'selling_price' => 68000,
-                'minimum_stock' => 5,
-                'track_stock' => true,
+                'name' => 'Cat Tembok Interior 5kg Putih',
+                'sku' => 'BBG-CAT-001',
+                'barcode' => '899700100005',
+                'category_id' => $categories['cat']->id,
+                'unit_id' => $units['kaleng']->id,
+                'purchase_price' => 145000,
+                'selling_price' => 185000,
+                'minimum_stock' => 10,
+                'stock' => 45,
+            ],
+            [
+                'name' => 'Cat Dasar Alkali 1kg',
+                'sku' => 'BBG-CAT-002',
+                'barcode' => '899700100006',
+                'category_id' => $categories['cat']->id,
+                'unit_id' => $units['kaleng']->id,
+                'purchase_price' => 38000,
+                'selling_price' => 52000,
+                'minimum_stock' => 10,
                 'stock' => 35,
+            ],
+            [
+                'name' => 'Pipa PVC AW 1/2 Inch x 4m',
+                'sku' => 'BBG-PIP-001',
+                'barcode' => '899700100007',
+                'category_id' => $categories['pipa']->id,
+                'unit_id' => $units['batang']->id,
+                'purchase_price' => 18000,
+                'selling_price' => 26000,
+                'minimum_stock' => 20,
+                'stock' => 100,
+            ],
+            [
+                'name' => 'Kran Air PVC 1/2 Inch',
+                'sku' => 'BBG-PIP-002',
+                'barcode' => '899700100008',
+                'category_id' => $categories['pipa']->id,
+                'unit_id' => $units['pcs']->id,
+                'purchase_price' => 15000,
+                'selling_price' => 24000,
+                'minimum_stock' => 15,
+                'stock' => 60,
+            ],
+            [
+                'name' => 'Palu Tukang 16 Oz',
+                'sku' => 'BBG-PRK-001',
+                'barcode' => '899700100009',
+                'category_id' => $categories['perkakas']->id,
+                'unit_id' => $units['pcs']->id,
+                'purchase_price' => 55000,
+                'selling_price' => 75000,
+                'minimum_stock' => 5,
+                'stock' => 25,
+            ],
+            [
+                'name' => 'Meteran 5 Meter',
+                'sku' => 'BBG-PRK-002',
+                'barcode' => '899700100010',
+                'category_id' => $categories['perkakas']->id,
+                'unit_id' => $units['pcs']->id,
+                'purchase_price' => 35000,
+                'selling_price' => 50000,
+                'minimum_stock' => 5,
+                'stock' => 20,
+            ],
+            [
+                'name' => 'Pasir Beton',
+                'sku' => 'BBG-MAT-001',
+                'barcode' => '899700100011',
+                'category_id' => $categories['material']->id,
+                'unit_id' => $units['kubik']->id,
+                'purchase_price' => 240000,
+                'selling_price' => 300000,
+                'minimum_stock' => 5,
+                'stock' => 25,
+            ],
+            [
+                'name' => 'Triplek 9mm 122x244cm',
+                'sku' => 'BBG-MAT-002',
+                'barcode' => '899700100012',
+                'category_id' => $categories['material']->id,
+                'unit_id' => $units['lembar']->id,
+                'purchase_price' => 95000,
+                'selling_price' => 125000,
+                'minimum_stock' => 10,
+                'stock' => 40,
             ],
         ];
 
         foreach ($items as $itemData) {
-            $item = Item::firstOrCreate(['sku' => $itemData['sku']], $itemData);
+            $item = Item::firstOrCreate(
+                ['sku' => $itemData['sku']],
+                [
+                    ...$itemData,
+                    'type' => 'PRODUCT',
+                    'track_stock' => true,
+                ]
+            );
 
-            if ($item->track_stock && $item->stock > 0) {
-                InventoryMovement::firstOrCreate([
+            InventoryMovement::firstOrCreate(
+                [
                     'item_id' => $item->id,
                     'type' => 'OPENING',
-                ], [
+                ],
+                [
                     'quantity' => $item->stock,
-                    'notes' => 'Stok awal sistem kasir pro',
-                ]);
-            }
+                    'notes' => 'Stok awal toko bahan bangunan',
+                ]
+            );
         }
     }
 }

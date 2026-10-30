@@ -18,7 +18,7 @@ return new class extends Migration
                 'RETURN',
                 'ADJUSTMENT_IN',
                 'ADJUSTMENT_OUT',
-                'DAMAGE'
+                'DAMAGE',
             ]);
             $table->decimal('quantity', 15, 2);
             $table->string('reference_type')->nullable();

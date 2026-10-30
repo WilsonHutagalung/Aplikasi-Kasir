@@ -7,11 +7,11 @@ use App\Models\CashierShift;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Payment;
+use App\Models\PaymentMethod;
 use App\Models\Sale;
 use App\Models\SaleItem;
-
 use Illuminate\Support\Facades\DB;
-use Exception;
+use Illuminate\Validation\ValidationException;
 
 class TransactionService
 {
@@ -28,20 +28,28 @@ class TransactionService
     public function checkout(array $data, int $userId): Sale
     {
         return DB::transaction(function () use ($data, $userId) {
-            // Find active shift for cashier if shifts are enabled
             $activeShift = CashierShift::where('user_id', $userId)
                 ->where('status', 'OPEN')
+                ->lockForUpdate()
                 ->first();
+
+            if (! $activeShift) {
+                throw ValidationException::withMessages([
+                    'shift' => 'Buka shift kasir terlebih dahulu sebelum membuat transaksi.',
+                ]);
+            }
 
             // Generate unique transaction number
             $prefix = BusinessSetting::getByKey('invoice_prefix', 'INV');
             $dateStr = now()->format('Ymd');
             $count = Sale::whereDate('created_at', now())->count() + 1;
-            $transactionNumber = sprintf("%s-%s-%04d", $prefix, $dateStr, $count);
+            $transactionNumber = sprintf('%s-%s-%04d', $prefix, $dateStr, $count);
 
             $itemsData = $data['items'] ?? [];
             if (empty($itemsData)) {
-                throw new Exception("Cart is empty.");
+                throw ValidationException::withMessages([
+                    'items' => 'Keranjang pesanan tidak boleh kosong.',
+                ]);
             }
 
             // Calculate Totals
@@ -78,7 +86,9 @@ class TransactionService
 
             $paidAmount = floatval($data['paid_amount'] ?? 0);
             if ($paidAmount < $grandTotal && ($data['status'] ?? 'COMPLETED') === 'COMPLETED') {
-                throw new Exception("Paid amount (" . number_format($paidAmount) . ") is less than total amount (" . number_format($grandTotal) . ").");
+                throw ValidationException::withMessages([
+                    'paid_amount' => 'Jumlah pembayaran kurang dari total transaksi.',
+                ]);
             }
 
             $changeAmount = max(0, $paidAmount - $grandTotal);
@@ -88,7 +98,7 @@ class TransactionService
                 'transaction_number' => $transactionNumber,
                 'user_id' => $userId,
                 'customer_id' => $data['customer_id'] ?? Customer::where('name', 'Walk-in Customer')->value('id'),
-                'shift_id' => $activeShift ? $activeShift->id : null,
+                'shift_id' => $activeShift->id,
                 'subtotal' => $subtotal,
                 'discount' => $discountTotal,
                 'tax' => $taxTotal,
@@ -131,7 +141,17 @@ class TransactionService
             }
 
             // Save Payment Records
-            if (!empty($data['payments'])) {
+            if (! empty($data['payments'])) {
+                $paymentTotal = collect($data['payments'])->sum(
+                    fn (array $payment): float => (float) $payment['amount']
+                );
+
+                if (abs($paymentTotal - $grandTotal) > 0.01) {
+                    throw ValidationException::withMessages([
+                        'payments' => 'Total pembayaran harus sama dengan total transaksi.',
+                    ]);
+                }
+
                 foreach ($data['payments'] as $pay) {
                     Payment::create([
                         'sale_id' => $sale->id,
@@ -140,9 +160,9 @@ class TransactionService
                         'reference' => $pay['reference'] ?? null,
                     ]);
                 }
-            } else if ($sale->status === 'COMPLETED') {
+            } elseif ($sale->status === 'COMPLETED') {
                 // Default Cash payment if none specified
-                $defaultMethod = \App\Models\PaymentMethod::where('code', 'CASH')->first();
+                $defaultMethod = PaymentMethod::where('code', 'CASH')->first();
                 if ($defaultMethod) {
                     Payment::create([
                         'sale_id' => $sale->id,

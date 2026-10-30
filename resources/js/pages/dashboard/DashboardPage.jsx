@@ -123,19 +123,19 @@ const DashboardPage = () => {
                             </div>
 
                             {/* Quick POS Navigation Card */}
-                            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg flex flex-col justify-between">
+                            <div className="bg-gradient-to-br from-sky-500 via-blue-600 to-blue-800 text-white p-6 rounded-2xl shadow-lg flex flex-col justify-between">
                                 <div>
                                     <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center mb-4">
                                         <ShoppingBag size={28} />
                                     </div>
                                     <h3 className="text-xl font-bold mb-2">Buka Kasir Sekarang</h3>
-                                    <p className="text-blue-100 text-sm leading-relaxed">
+                                    <p className="text-sky-50 text-sm leading-relaxed">
                                         Mulai transaksi penjualan cepat dengan pencarian barcode, hold order, dan cetak struk thermal.
                                     </p>
                                 </div>
                                 <Link
                                     to="/pos"
-                                    className="mt-6 w-full py-3 bg-white text-blue-600 font-bold rounded-xl text-center shadow-md hover:bg-blue-50 transition-all text-sm block"
+                                    className="mt-6 w-full py-3 bg-white text-blue-700 font-bold rounded-xl text-center shadow-md hover:bg-sky-50 transition-all text-sm block"
                                 >
                                     Masuk Halaman POS →
                                 </Link>

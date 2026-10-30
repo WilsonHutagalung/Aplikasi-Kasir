@@ -22,6 +22,7 @@ class UnitController extends Controller
         ]);
 
         $unit = Unit::create($validated);
+
         return response()->json($unit, 201);
     }
 
@@ -34,12 +35,14 @@ class UnitController extends Controller
         ]);
 
         $unit->update($validated);
+
         return response()->json($unit);
     }
 
     public function destroy(Unit $unit)
     {
         $unit->delete();
+
         return response()->json(['message' => 'Satuan berhasil dihapus']);
     }
 }

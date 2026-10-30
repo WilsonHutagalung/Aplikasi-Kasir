@@ -11,6 +11,7 @@ class BusinessSetting extends Model
     public static function getByKey(string $key, $default = null)
     {
         $setting = static::where('key', $key)->first();
+
         return $setting ? $setting->value : $default;
     }
 

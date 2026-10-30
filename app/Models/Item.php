@@ -73,7 +73,7 @@ class Item extends Model
 
     public static function generateBarcode(Item $item): string
     {
-        return '899' . now()->format('ymdHis') . str_pad((string) random_int(0, 99), 2, '0', STR_PAD_LEFT);
+        return '899'.now()->format('ymdHis').str_pad((string) random_int(0, 99), 2, '0', STR_PAD_LEFT);
     }
 
     public function category()

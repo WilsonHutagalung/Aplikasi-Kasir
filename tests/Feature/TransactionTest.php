@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\CashierShift;
 use App\Models\Category;
-use App\Models\Customer;
 use App\Models\Item;
 use App\Models\PaymentMethod;
 use App\Models\Role;
@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\InventoryService;
 use App\Services\TransactionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class TransactionTest extends TestCase
@@ -32,6 +33,12 @@ class TransactionTest extends TestCase
         $category = Category::create(['name' => 'Makanan']);
         $unit = Unit::create(['name' => 'Pcs', 'symbol' => 'pcs']);
         $paymentMethod = PaymentMethod::create(['name' => 'Cash', 'code' => 'CASH']);
+        CashierShift::create([
+            'user_id' => $user->id,
+            'opening_cash' => 100000,
+            'opening_date' => now(),
+            'status' => 'OPEN',
+        ]);
 
         $productA = Item::create([
             'name' => 'Product A',
@@ -59,7 +66,7 @@ class TransactionTest extends TestCase
             'stock' => 10,
         ]);
 
-        $inventoryService = new InventoryService();
+        $inventoryService = new InventoryService;
         $transactionService = new TransactionService($inventoryService);
 
         // Product A x2 = 20.000, Product B x1 = 20.000. Subtotal = 40.000, Discount = 5.000, Tax = 3.500 => Total = 38.500
@@ -73,7 +80,7 @@ class TransactionTest extends TestCase
             ],
             'payments' => [
                 ['payment_method_id' => $paymentMethod->id, 'amount' => 38500],
-            ]
+            ],
         ];
 
         $sale = $transactionService->checkout($saleData, $user->id);
@@ -85,5 +92,28 @@ class TransactionTest extends TestCase
         // Check stock deducted
         $this->assertEquals(18, $productA->fresh()->stock);
         $this->assertEquals(9, $productB->fresh()->stock);
+    }
+
+    public function test_checkout_requires_an_open_cashier_shift(): void
+    {
+        $role = Role::create(['name' => 'cashier', 'display_name' => 'Cashier']);
+        $user = User::create([
+            'name' => 'Kasir Test',
+            'username' => 'kasirtest',
+            'email' => 'kasir-shift@test.com',
+            'password' => bcrypt('password'),
+            'role_id' => $role->id,
+        ]);
+
+        $inventoryService = new InventoryService;
+        $transactionService = new TransactionService($inventoryService);
+
+        $this->expectException(ValidationException::class);
+        $transactionService->checkout([
+            'paid_amount' => 0,
+            'items' => [
+                ['item_id' => 999, 'quantity' => 1],
+            ],
+        ], $user->id);
     }
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/Layout/DashboardLayout';
 import { useCart } from '../../context/CartContext';
 import api from '../../services/api';
@@ -47,6 +48,10 @@ const PosPage = () => {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
+    const [shiftLoading, setShiftLoading] = useState(true);
+    const [activeShift, setActiveShift] = useState(null);
+    const [pageError, setPageError] = useState('');
+    const navigate = useNavigate();
 
     // Modals & Held transactions
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -64,6 +69,7 @@ const PosPage = () => {
 
     useEffect(() => {
         fetchInitialData();
+        fetchCurrentShift();
     }, []);
 
     // Handle Keyboard Shortcuts
@@ -74,10 +80,10 @@ const PosPage = () => {
                 searchInputRef.current?.focus();
             } else if (e.key === 'F4') {
                 e.preventDefault();
-                handleHoldTransaction();
+                if (activeShift) handleHoldTransaction();
             } else if (e.key === 'F8') {
                 e.preventDefault();
-                if (cart.length > 0) setPaymentModalOpen(true);
+                if (activeShift && cart.length > 0) setPaymentModalOpen(true);
             } else if (e.key === 'Escape') {
                 setPaymentModalOpen(false);
                 setHeldModalOpen(false);
@@ -86,7 +92,22 @@ const PosPage = () => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [cart, grandTotal]);
+    }, [activeShift, cart, grandTotal]);
+
+    const fetchCurrentShift = async () => {
+        setShiftLoading(true);
+
+        try {
+            const response = await api.get('/shifts/current');
+            setActiveShift(response.data.active ? response.data.shift : null);
+            setPageError('');
+        } catch (error) {
+            setActiveShift(null);
+            setPageError(error.response?.data?.message || 'Status shift tidak dapat dimuat.');
+        } finally {
+            setShiftLoading(false);
+        }
+    };
 
     const fetchInitialData = async () => {
         setLoading(true);
@@ -107,7 +128,7 @@ const PosPage = () => {
                 setSelectedPaymentMethod(setRes.data.payment_methods[0].id);
             }
         } catch (err) {
-            console.error(err);
+            setPageError(err.response?.data?.message || 'Data kasir tidak dapat dimuat.');
         } finally {
             setLoading(false);
         }
@@ -116,6 +137,11 @@ const PosPage = () => {
     // Auto barcode search on Enter or scan
     const handleSearchSubmit = (e) => {
         e.preventDefault();
+        if (!activeShift) {
+            setPageError('Buka shift kasir terlebih dahulu sebelum menambahkan pesanan.');
+            return;
+        }
+
         if (!searchQuery.trim()) return;
 
         const exactMatch = items.find(
@@ -125,7 +151,7 @@ const PosPage = () => {
         );
 
         if (exactMatch) {
-            addToCart(exactMatch, 1);
+            handleAddItem(exactMatch);
             setSearchQuery('');
         }
     };
@@ -140,8 +166,23 @@ const PosPage = () => {
         return matchesCategory && matchesSearch;
     });
 
+    const handleAddItem = (item) => {
+        if (!activeShift) {
+            setPageError('Buka shift kasir terlebih dahulu sebelum menambahkan pesanan.');
+            return;
+        }
+
+        addToCart(item, 1);
+        setPageError('');
+    };
+
     const handleHoldTransaction = async () => {
         if (cart.length === 0) return;
+        if (!activeShift) {
+            setPageError('Buka shift kasir terlebih dahulu sebelum menahan pesanan.');
+            return;
+        }
+
         try {
             await api.post('/pos/hold', {
                 customer_id: customer?.id,
@@ -151,9 +192,9 @@ const PosPage = () => {
                 items: cart,
             });
             clearCart();
-            alert('Transaksi berhasil di-hold!');
+            setPageError('');
         } catch (err) {
-            alert('Gagal hold transaksi.');
+            setPageError(err.response?.data?.message || 'Gagal menahan transaksi.');
         }
     };
 
@@ -163,7 +204,7 @@ const PosPage = () => {
             setHeldList(res.data);
             setHeldModalOpen(true);
         } catch (err) {
-            alert('Gagal memuat hold transaksi.');
+            setPageError(err.response?.data?.message || 'Gagal memuat transaksi tertunda.');
         }
     };
 
@@ -171,6 +212,12 @@ const PosPage = () => {
         e.preventDefault();
         setCheckoutError('');
         setCheckoutLoading(true);
+
+        if (!activeShift) {
+            setCheckoutError('Buka shift kasir terlebih dahulu sebelum memproses pembayaran.');
+            setCheckoutLoading(false);
+            return;
+        }
 
         const numericPaid = parseFloat(paidAmount) || 0;
         if (numericPaid < grandTotal) {
@@ -201,6 +248,7 @@ const PosPage = () => {
             clearCart();
             setPaidAmount('');
             fetchInitialData(); // refresh stock balances
+            fetchCurrentShift();
         } catch (err) {
             setCheckoutError(err.response?.data?.message || 'Gagal menyelesaikan checkout.');
         } finally {
@@ -216,6 +264,28 @@ const PosPage = () => {
     return (
         <DashboardLayout>
             <div className="h-[calc(100vh-5rem)] flex flex-col lg:flex-row gap-4">
+                {!shiftLoading && !activeShift && (
+                    <div className="fixed top-4 right-4 z-40 w-full max-w-md rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900 shadow-lg">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <p className="font-bold text-sm">Shift kasir belum dibuka</p>
+                                <p className="mt-1 text-xs">Buka shift terlebih dahulu untuk menambahkan pesanan dan memproses pembayaran.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => navigate('/shifts')}
+                                className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-700"
+                            >
+                                Buka Shift
+                            </button>
+                        </div>
+                    </div>
+                )}
+                {pageError && (
+                    <div className="fixed bottom-4 right-4 z-40 max-w-md rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium text-red-700 shadow-lg">
+                        {pageError}
+                    </div>
+                )}
                 {/* LEFT SIDE: Items Grid & Controls */}
                 <div className="flex-1 flex flex-col min-w-0 bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
                     {/* Search & Shortcuts Bar */}
@@ -227,6 +297,7 @@ const PosPage = () => {
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
+                                disabled={!activeShift}
                                 placeholder="Scan Barcode / Cari Nama / SKU (F2)..."
                                 className="w-full pl-10 pr-4 py-2 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 shadow-2xs"
                             />
@@ -266,7 +337,8 @@ const PosPage = () => {
                             filteredItems.map((item) => (
                                 <button
                                     key={item.id}
-                                    onClick={() => addToCart(item, 1)}
+                                    onClick={() => handleAddItem(item)}
+                                    disabled={!activeShift}
                                     className="bg-white border border-slate-200 hover:border-blue-500 hover:shadow-md p-3.5 rounded-2xl text-left flex flex-col justify-between transition-all group cursor-pointer relative hover:-translate-y-0.5 active:translate-y-0 min-h-[140px]"
                                 >
                                     {item.image_url ? (
@@ -334,6 +406,7 @@ const PosPage = () => {
                             <User size={16} className="text-slate-400 shrink-0" />
                             <select
                                 value={customer?.id || ''}
+                                disabled={!activeShift}
                                 onChange={(e) => {
                                     const c = customers.find((cust) => cust.id === parseInt(e.target.value));
                                     setCustomer(c || null);
@@ -367,6 +440,7 @@ const PosPage = () => {
                                     <div className="flex items-center space-x-1">
                                         <button
                                             onClick={() => updateQuantity(item.item_id, item.quantity - 1)}
+                                            disabled={!activeShift}
                                             className="w-6 h-6 bg-white border border-slate-200 rounded-md flex items-center justify-center text-slate-600 hover:bg-slate-100"
                                         >
                                             <Minus size={12} />
@@ -374,6 +448,7 @@ const PosPage = () => {
                                         <span className="w-8 text-center text-xs font-bold text-slate-800">{item.quantity}</span>
                                         <button
                                             onClick={() => updateQuantity(item.item_id, item.quantity + 1)}
+                                            disabled={!activeShift}
                                             className="w-6 h-6 bg-white border border-slate-200 rounded-md flex items-center justify-center text-slate-600 hover:bg-slate-100"
                                         >
                                             <Plus size={12} />
@@ -402,6 +477,7 @@ const PosPage = () => {
                                 <input
                                     type="number"
                                     value={discount || ''}
+                                    disabled={!activeShift}
                                     onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
                                     placeholder="0"
                                     className="w-20 text-right px-2 py-0.5 text-xs border border-slate-200 rounded bg-white"
@@ -412,6 +488,7 @@ const PosPage = () => {
                                 <input
                                     type="number"
                                     value={taxRate || ''}
+                                    disabled={!activeShift}
                                     onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
                                     placeholder="0"
                                     className="w-14 text-right px-2 py-0.5 text-xs border border-slate-200 rounded bg-white"
@@ -427,14 +504,20 @@ const PosPage = () => {
                         <div className="grid grid-cols-2 gap-2 pt-1">
                             <button
                                 onClick={handleHoldTransaction}
-                                disabled={cart.length === 0}
+                                disabled={cart.length === 0 || !activeShift}
                                 className="py-2.5 px-3 bg-amber-100 hover:bg-amber-200 text-amber-800 font-semibold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
                             >
                                 <PauseCircle size={15} /> Hold (F4)
                             </button>
                             <button
-                                onClick={() => setPaymentModalOpen(true)}
-                                disabled={cart.length === 0}
+                                onClick={() => {
+                                    if (!activeShift) {
+                                        setPageError('Buka shift kasir terlebih dahulu sebelum memproses pembayaran.');
+                                        return;
+                                    }
+                                    setPaymentModalOpen(true);
+                                }}
+                                disabled={cart.length === 0 || !activeShift}
                                 className="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20 transition-all disabled:opacity-50 cursor-pointer"
                             >
                                 <CreditCard size={15} /> Bayar (F8)

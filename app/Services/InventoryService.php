@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\BusinessSetting;
 use App\Models\InventoryMovement;
 use App\Models\Item;
 use Illuminate\Support\Facades\DB;
-use Exception;
+use Illuminate\Validation\ValidationException;
 
 class InventoryService
 {
@@ -20,8 +21,10 @@ class InventoryService
         ?int $referenceId = null,
         ?string $notes = null
     ): InventoryMovement {
-        if (!$item->track_stock) {
-            throw new Exception("Product {$item->name} does not track stock.");
+        if (! $item->track_stock) {
+            throw ValidationException::withMessages([
+                'item' => "Produk {$item->name} tidak menggunakan stok.",
+            ]);
         }
 
         return DB::transaction(function () use ($item, $type, $quantity, $referenceType, $referenceId, $notes) {
@@ -32,9 +35,11 @@ class InventoryService
             $newStock = $item->stock + $stockDelta;
 
             // Check negative stock rule
-            $allowNegative = \App\Models\BusinessSetting::getByKey('enable_negative_stock', '0') === '1';
-            if ($newStock < 0 && !$allowNegative) {
-                throw new Exception("Insufficient stock for product {$item->name}. Available: {$item->stock}, requested: " . abs($quantity));
+            $allowNegative = BusinessSetting::getByKey('enable_negative_stock', '0') === '1';
+            if ($newStock < 0 && ! $allowNegative) {
+                throw ValidationException::withMessages([
+                    'stock' => "Stok {$item->name} tidak mencukupi. Tersedia: {$item->stock}, diminta: ".abs($quantity),
+                ]);
             }
 
             // Update item stock cache

@@ -25,8 +25,8 @@ class PosController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%")
-                  ->orWhere('barcode', 'like', "%{$search}%");
+                    ->orWhere('sku', 'like', "%{$search}%")
+                    ->orWhere('barcode', 'like', "%{$search}%");
             });
         }
 
@@ -90,23 +90,28 @@ class PosController extends Controller
         ], 201);
     }
 
-    public function getHeld()
+    public function getHeld(Request $request)
     {
         $held = Sale::with(['items.item', 'customer'])
             ->where('status', 'HELD')
+            ->where('user_id', $request->user()->id)
+            ->whereHas('shift', function ($query) {
+                $query->where('status', 'OPEN');
+            })
             ->latest()
             ->get();
 
         return response()->json($held);
     }
 
-    public function deleteHeld(Sale $sale)
+    public function deleteHeld(Request $request, Sale $sale)
     {
-        if ($sale->status !== 'HELD') {
+        if ($sale->status !== 'HELD' || $sale->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Hanya transaksi HELD yang dapat dihapus.'], 422);
         }
 
         $sale->delete();
+
         return response()->json(['message' => 'Hold transaksi berhasil dihapus']);
     }
 }

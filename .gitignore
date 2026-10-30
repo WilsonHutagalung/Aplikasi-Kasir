@@ -1,8 +1,12 @@
 # Environment & Credentials
 .env
 .env.*
-!.env.example
 auth.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
 
 # Dependencies
 /node_modules
@@ -20,6 +24,7 @@ auth.json
 /database/*.sqlite
 /database/*.sqlite-journal
 /storage/*.key
+/storage/app/backups/*
 /storage/logs/*
 !/storage/logs/.gitkeep
 /storage/framework/cache/*

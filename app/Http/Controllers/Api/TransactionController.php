@@ -9,7 +9,6 @@ use App\Models\Sale;
 use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Exception;
 
 class TransactionController extends Controller
 {
@@ -34,8 +33,8 @@ class TransactionController extends Controller
 
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('transaction_date', [
-                $request->start_date . ' 00:00:00',
-                $request->end_date . ' 23:59:59'
+                $request->start_date.' 00:00:00',
+                $request->end_date.' 23:59:59',
             ]);
         }
 
@@ -87,7 +86,7 @@ class TransactionController extends Controller
 
         return DB::transaction(function () use ($sale, $validated, $request) {
             $prefix = 'RFD';
-            $refundNumber = $prefix . '-' . now()->format('YmdHis');
+            $refundNumber = $prefix.'-'.now()->format('YmdHis');
             $totalRefundAmount = 0;
 
             $refund = Refund::create([

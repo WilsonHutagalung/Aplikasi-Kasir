@@ -91,10 +91,6 @@ const LoginPage = () => {
                     </button>
                 </form>
 
-                <div className="pt-4 border-t border-slate-100 text-center text-xs text-slate-400 space-y-1">
-                    <p>Demo Akun: <span className="font-semibold text-slate-600">owner</span> / <span className="font-semibold text-slate-600">admin</span> / <span className="font-semibold text-slate-600">kasir</span></p>
-                    <p>Password: <span className="font-semibold text-slate-600">password</span></p>
-                </div>
             </div>
         </div>
     );
